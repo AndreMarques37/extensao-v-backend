@@ -2,8 +2,8 @@ const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const cors = require('cors');
 
-const supabaseUrl = 'https://mqldjixmeahjxydyjfxb.supabase.co';
-const supabaseKey = 'sb_secret_x-VUZKkpF9wwkLE059sfVg_YCURVnLT'; // Verifique se esta chave está completa
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
