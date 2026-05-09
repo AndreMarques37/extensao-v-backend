@@ -3,13 +3,13 @@ const express = require('express');
 const cors = require('cors');
 
 const supabaseUrl = 'https://mqldjixmeahjxydyjfxb.supabase.co';
-const supabaseKey = 'sb_secret_x-VUZKkpF9wwkLE059sfVg_YCURVnLT';
+const supabaseKey = 'sb_secret_x-VUZKkpF9wwkLE059sfVg_YCURVnLT'; // Verifique se esta chave está completa
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração de CORS (Corrigida e única)
+// 1. CORS configurado logo no início
 app.use(cors({
   origin: 'https://extensao-v-frontend.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -19,45 +19,34 @@ app.use(cors({
 app.options('*', cors());
 app.use(express.json());
 
-// --- ROTA PARA LER (SUPABASE) ---
+// --- ROTA PARA LER ---
 app.get('/agendamentos', async (req, res) => {
-  try {
-    const { data, error } = await supabase.from('agendamentos').select('*');
-    if (error) return res.status(500).json({ erro: error.message });
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ erro: "Falha interna no servidor" });
-  }
+  const { data, error } = await supabase.from('agendamentos').select('*');
+  if (error) return res.status(500).json({ erro: error.message });
+  res.json(data);
 });
 
-// --- ROTA PARA ATUALIZAR (AGORA NO SUPABASE) ---
+// --- ROTA PARA CRIAR (Faltava esta!) ---
+app.post('/agendamentos', async (req, res) => {
+  const { data, error } = await supabase.from('agendamentos').insert([req.body]);
+  if (error) return res.status(500).json({ erro: error.message });
+  res.status(201).json({ mensagem: "Salvo com sucesso!", data });
+});
+
+// --- ROTA PARA ATUALIZAR (Migrada de arquivo para Supabase) ---
 app.put('/agendamentos/:id', async (req, res) => {
   const { id } = req.params;
-  const agendamentoAtualizado = req.body;
+  const { data, error } = await supabase
+    .from('agendamentos')
+    .update(req.body)
+    .eq('id', id);
 
-  try {
-    // Atualiza diretamente no banco, removendo a dependência do arquivo .json
-    const { data, error } = await supabase
-      .from('agendamentos')
-      .update(agendamentoAtualizado)
-      .eq('id', id);
-
-    if (error) {
-      return res.status(500).json({ message: error.message });
-    }
-
-    console.log(`✅ Agendamento ${id} atualizado no Supabase!`);
-    res.json({ message: "Atualizado com sucesso!" });
-  } catch (error) {
-    res.status(500).json({ message: "Erro no servidor" });
-  }
+  if (error) return res.status(500).json({ erro: error.message });
+  res.json({ mensagem: "Atualizado com sucesso!" });
 });
 
-// Exportação necessária para a Vercel
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT} 🚀`);
-  });
-}
-
 module.exports = app;
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => console.log(`Rodando na porta ${PORT}`));
+}
