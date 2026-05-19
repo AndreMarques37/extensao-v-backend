@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const cors = require('cors');
@@ -9,8 +11,22 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const origensPermitidas = [
+  'https://extensao-v-frontend.vercel.app',
+  'http://localhost:9000', 
+  'http://localhost:5173', 
+];
+
 app.use(cors({
-  origin: 'https://extensao-v-frontend.vercel.app',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    if (origensPermitidas.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Bloqueado pelas políticas de CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
