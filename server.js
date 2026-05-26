@@ -3,10 +3,7 @@ require('dotenv').config()
 const { createClient } = require('@supabase/supabase-js');
 const express = require('express');
 const cors = require('cors');
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = require('./supabase');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +13,8 @@ const origensPermitidas = [
   'http://localhost:9000', 
   'http://localhost:5173', 
 ];
+
+const rotasClientes = require('./routes/clientes');
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -32,6 +31,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
+app.use(rotasClientes);
 
 app.get('/agendamentos', async (req, res) => {
   const { data, error } = await supabase.from('agendamentos').select('*');
@@ -44,6 +44,7 @@ app.post('/agendamentos', async (req, res) => {
   if (error) return res.status(500).json({ erro: error.message });
   res.status(201).json({ mensagem: "Salvo com sucesso!", data });
 });
+
 
 app.put('/agendamentos/:id', async (req, res) => {
   const { id } = req.params;
